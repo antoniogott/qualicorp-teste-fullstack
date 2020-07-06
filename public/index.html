@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html hl="pt-BR">
+
+<head>
+    <title>Qualicorp</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
+    <script
+            src="https://cdn.jsdelivr.net/npm/jquery-mask-plugin@1.14.16/dist/jquery.mask.min.js"></script>
+    <script
+            src="https://cdn.jsdelivr.net/npm/vue-jquery-mask@1.0.3/dist/vue-jquery-mask.min.js"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/css/bootstrap.min.css">
+</head>
+
+<body>
+
+    <div id="app" class="container p-3">
+
+        <div class="card p-3 mb-4">
+
+            <h1>Cadastrar/editar clientes</h1>
+
+            <form id="formSalvar" class="mt-4" v-on:submit.prevent="salvarCliente">
+
+                <div class="row align-items-baseline">
+
+                    <div class="col-12 col-md-6">
+                        <div class="form-group">
+
+                            <label for="inCpf">CPF:</label>
+
+                            <div class="d-flex">
+                                <vue-mask id="inCpf" v-model="cliente.cpf" class="form-control"
+                                          mask="000.000.000-00" required>
+                                </vue-mask>
+
+                                <button type="button" class="btn btn-info ml-2"
+                                        v-on:click="buscarCliente">
+
+                                    <div v-if="buscando" class="spinner-border spinner-border-sm">
+                                    </div>
+                                    <div v-else>Buscar</div>
+
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <div class="form-group">
+                            <label for="inNome">Nome:</label>
+                            <input id="inNome" v-model="cliente.nome" class="form-control"
+                                   required />
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-12 col-md-6">
+                        <div class="form-group">
+                            <label for="inEmail">Email:</label>
+                            <input id="inEmail" v-model="cliente.email" class="form-control"
+                                   required />
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <div class="form-group">
+                            <label for="inTelefone">Telefone:</label>
+                            <vue-mask id="inTelefone" v-model="cliente.telefone"
+                                      class="form-control phone" mask="(00) 0000-00000" required />
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <div class="d-flex align-items-center justify-content-start">
+                        <button v-on:click="listarClientes" type="button"
+                                class="btn btn-secondary mr-3">Listar</button>
+                        <div v-if="salvando" class="spinner-border mr-4"></div>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-end">
+                        <div v-if="excluindo" class="spinner-border mr-4"></div>
+                        <button v-on:click="excluirCliente" type="button"
+                                class="btn btn-danger mr-3">Excluir</button>
+                        <div v-if="salvando" class="spinner-border mr-4"></div>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </div>
+                </div>
+
+            </form>
+
+        </div>
+
+        <div class="card p-3">
+
+            <h1>Listar clientes</h1>
+
+            <div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">CPF</th>
+                            <th scope="col">Nome</th>
+                            <th scope="col">Email</th>
+                            <th scope="col">Telefone</th>
+                            <th scope="col"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="cli in listaClientes" :key="cli.cpf">
+                            <td>{{cli.cpf}}</td>
+                            <td>{{cli.nome}}</td>
+                            <td>{{cli.email}}</td>
+                            <td>{{cli.telefone}}</td>
+                            <td>
+                                <button v-on:click="app.cliente = cli" type="button"
+                                        class="btn btn-dark">Editar</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+
+    <script>
+        Vue.use(VuejQueryMask);
+
+        var app = new Vue({
+            el: '#app',
+            data: {
+                cliente: {
+                    nome: "",
+                    cpf: "",
+                    email: "",
+                    telefone: ""
+                },
+                listaClientes: [],
+                salvando: false,
+                buscando: false,
+                excluindo: false,
+                listando: false
+            },
+            methods: {
+                salvarCliente: async function () {
+                    this.$data.salvando = true;
+
+                    try {
+                        const response = await fetch("/cliente", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify(this.$data.cliente)
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`${response.status} - ${response.statusText} `);
+                        }
+
+                        alert("Cliente salvo com sucesso.");
+                        this.$data.cliente = {};
+
+                    } catch (error) {
+                        console.error(error);
+                        alert(`Erro ao salvar os dados do cliente:\n${error}`);
+                    }
+
+                    this.$data.salvando = false;
+                },
+
+                buscarCliente: async function () {
+                    this.$data.buscando = true;
+
+                    try {
+                        const response = await fetch(`/cliente/${this.$data.cliente.cpf}`);
+
+                        if (response.ok) {
+                            const cliente = await response.json();
+                            this.$data.cliente = cliente;
+                        }
+                        else {
+                            if (response.status == 404) {
+                                alert("Nenhum cliente encontrado com esse CPF.")
+                            }
+                            else {
+                                throw new Error(`${response.status} - ${response.statusText} `);
+                            }
+                        }
+
+                    } catch (error) {
+                        console.error(error);
+                        alert(`Erro ao salvar os dados do cliente:\n${error}`);
+                    }
+
+                    this.$data.buscando = false;
+                },
+
+                listarClientes: async function () {
+                    this.$data.listando = true;
+
+                    try {
+                        const queryString = new URLSearchParams({
+                            cpf: this.$data.cliente.cpf || "",
+                            nome: this.$data.cliente.nome || "",
+                            email: this.$data.cliente.email || "",
+                            telefone: this.$data.cliente.telefone || ""
+                        }).toString();
+
+                        const response = await fetch(`/cliente?${queryString}`);
+
+                        if (response.ok) {
+                            const clientes = await response.json();
+                            this.$data.listaClientes = clientes;
+                        }
+                        else {
+                            this.$data.listaClientes = undefined;
+                            if (response.status != 404) {
+                                throw new Error(`${response.status} - ${response.statusText} `);
+                            }
+                        }
+
+                    } catch (error) {
+                        console.error(error);
+                        alert(`Erro ao salvar os dados do cliente:\n${error}`);
+                    }
+
+                    this.$data.listando = false;
+                },
+
+                excluirCliente: async function () {
+                    this.$data.excluindo = true;
+
+                    try {
+                        const queryString = new URLSearchParams({
+                            cpf: this.$data.cliente.cpf
+                        }).toString();
+
+                        const response = await fetch(`/cliente?${queryString}`, {
+                            method: "DELETE"
+                        });
+
+                        if (response.ok) {
+                            alert("Cliente exlcuído com sucesso.");
+                        }
+                        else {
+                            throw new Error(`${response.status} - ${response.statusText} `);
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        alert(`Erro ao salvar os dados do cliente:\n${error}`);
+                    }
+
+                    this.$data.excluindo = false;
+                }
+            }
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/js/bootstrap.min.js"></script>
+
+</body>
+
+</html>
