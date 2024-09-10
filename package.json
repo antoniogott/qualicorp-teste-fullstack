@@ -10,7 +10,7 @@
   "author": "Antonio Gottsfritz",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "body-parser": "^1.20.1",
+    "body-parser": "^1.20.3",
     "express": "^4.20.0",
     "neo4j-driver": "^4.1.0"
   },
