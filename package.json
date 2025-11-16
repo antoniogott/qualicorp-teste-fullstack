@@ -15,7 +15,7 @@
     "neo4j-driver": "^4.1.0"
   },
   "devDependencies": {
-    "eslint": "^7.4.0",
+    "eslint": "^9.39.1",
     "eslint-plugin-vue": "^6.2.2"
   }
 }
